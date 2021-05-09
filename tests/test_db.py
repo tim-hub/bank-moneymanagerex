@@ -1,6 +1,6 @@
 import unittest
 import sqlite3
-from mmb import create_detail_to_account
+from db import create_detail_to_account, create_detail_to_payee
 
 
 class DBTestCase(unittest.TestCase):
@@ -16,6 +16,17 @@ class DBTestCase(unittest.TestCase):
 
         self.cursor.execute('''
         SELECT name FROM sqlite_master WHERE type='table' AND name='details_to_account';
+        ''')
+
+        r = self.cursor.fetchall()
+
+        self.assertEqual(len(r), 1)
+
+    def test_creat_table_details_to_payee(self):
+        create_detail_to_payee(self.cursor)
+
+        self.cursor.execute('''
+        SELECT name FROM sqlite_master WHERE type='table' AND name='details_to_payee';
         ''')
 
         r = self.cursor.fetchall()
