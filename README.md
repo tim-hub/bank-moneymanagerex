@@ -13,4 +13,5 @@
         1. Promote to user input
     
 P.S.
-- credit ignore `Autopayment Thanks you`
+- credit card ignore `Autopayment Thanks you`
+- consider multi currency across accounts. need a fancy query to get rate factor
