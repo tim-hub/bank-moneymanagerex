@@ -1,7 +1,9 @@
 import unittest
 import sqlite3
-from db import create_table_detail_to_account, get_trans_id, get_cat_and_sub_cat_id_by_name, insert_payee, \
-    insert_details_to_account, get_account_id, get_transcode
+
+from db.create import create_table_detail_to_account
+from db.db import get_trans_id, get_cat_and_sub_cat_id_by_name, insert_payee, \
+    insert_details_to_account, get_account_id, get_transcode, insert_details_to_account_from_details_and_account_name
 
 
 class DBTestCase(unittest.TestCase):
@@ -17,16 +19,16 @@ class DBTestCase(unittest.TestCase):
     def test_always_true(self):
         self.assertEqual(True, True)
 
-    # def test_creat_table_details_to_payee(self):
-    #     create_table_detail_to_payee(self.cursor)
-    #
-    #     self.cursor.execute('''
-    #     SELECT name FROM sqlite_master WHERE type='table' AND name='details_to_payee';
-    #     ''')
-    #
-    #     r = self.cursor.fetchall()
-    #
-    #     self.assertEqual(len(r), 1)
+    def test_creat_table_details_to_payee(self):
+        create_table_detail_to_payee(self.cursor)
+
+        self.cursor.execute('''
+        SELECT name FROM sqlite_master WHERE type='table' AND name='details_to_payee';
+        ''')
+
+        r = self.cursor.fetchall()
+
+        self.assertEqual(len(r), 1)
 
     def test_creat_table_details_to_account(self):
         create_table_detail_to_account(self.cursor)
@@ -86,13 +88,22 @@ class DBTestCase(unittest.TestCase):
         self.assertEqual(r,1)
 
     def test_get_transcode_by_code(self):
-        r = get_transcode(self.cursor, 'Salary')
+        r = get_transcode(self.cursor, 'Salary'.lower())
         self.assertEqual(r, 'Deposit')
 
 
     def test_get_transcode_by_code_with_wrong_type_name(self):
-        r = get_transcode(self.cursor, 'Salary1')
+        r = get_transcode(self.cursor, 'Salary1'.lower())
         self.assertEqual(r, None)
+
+    def test_insert_details_to_account_from_details_and_account_name(self):
+        r = insert_details_to_account_from_details_and_account_name(self.cursor, 'detail1', 'NZ Cash')
+        self.assertEqual(r, 1)
+        self.cursor.execute(
+            '''
+            DELETE FROM details_to_account WHERE DETAILS = '%s'
+            ''' % 'detail1'
+        )
 
 if __name__ == '__main__':
     unittest.main()

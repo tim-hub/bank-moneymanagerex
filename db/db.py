@@ -7,22 +7,6 @@ INSERT_QUERY = '''
 VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?);
 '''
 
-"""
-Table between detail to ToAccountID
-"""
-
-
-def create_table_detail_to_account(cur: Cursor) -> None:
-    query = '''
-    CREATE TABLE IF NOT EXISTS details_to_account (
-        ID INTEGER PRIMARY KEY,
-        DETAILS TEXT NOT NULL,
-        TOACCOUNTID INTEGER NOT NULL
-    )
-    '''
-    cur.execute(query)
-
-
 # def create_table_detail_to_payee(con: Cursor) -> None:
 #     query = '''
 #     CREATE TABLE IF NOT EXISTS details_to_payee (
@@ -47,9 +31,20 @@ def insert_payee(cur: Cursor, name: str, cat_id: int, sub_id: int) -> int:
 def insert_details_to_account(cur: Cursor, details: str, to_account_id: int) -> int:
     r = cur.execute('''
     INSERT INTO details_to_account
-    (DETAILS, TOACCOUNTID)
+    (DETAILS, ACCOUNTID)
     VALUES (?,?)
     ''', (details, to_account_id))
+    return r.rowcount
+
+def insert_details_to_account_from_details_and_account_name(cur: Cursor, details: str, account_name: str) -> int:
+    r = cur.execute('''
+INSERT INTO details_to_account(DETAILS, ACCOUNTID)
+
+SELECT ?, ACCOUNTID
+FROM ACCOUNTLIST_V1
+WHERE ACCOUNTNAME = ?
+LIMIT 1
+    ''', (details, account_name))
     return r.rowcount
 
 
