@@ -1,51 +1,11 @@
 from sqlite3 import Cursor
+
+# INSERT_QUERY = '''
+#     INSERT INTO CHECKINGACCOUNT_V1
+# (TRANSID, ACCOUNTID, TOACCOUNTID, PAYEEID, TRANSCODE, TRANSAMOUNT, TRANSACTIONNUMBER, NOTES, CATEGID, SUBCATEGID, TRANSDATE, FOLLOWUPID, TOTRANSAMOUNT)
+# VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?);
+# '''
 from typing import Tuple
-
-INSERT_QUERY = '''
-    INSERT INTO CHECKINGACCOUNT_V1
-(TRANSID, ACCOUNTID, TOACCOUNTID, PAYEEID, TRANSCODE, TRANSAMOUNT, TRANSACTIONNUMBER, NOTES, CATEGID, SUBCATEGID, TRANSDATE, FOLLOWUPID, TOTRANSAMOUNT)
-VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?);
-'''
-
-# def create_table_detail_to_payee(con: Cursor) -> None:
-#     query = '''
-#     CREATE TABLE IF NOT EXISTS details_to_payee (
-#         ID INTEGER PRIMARY KEY,
-#         DETAILS TEXT NOT NULL,
-#         PAYEE INTEGER NOT NULL
-#     )
-#     '''
-#     con.execute(query)
-
-
-def insert_payee(cur: Cursor, name: str, cat_id: int, sub_id: int) -> int:
-    r = cur.execute('''
-    INSERT INTO PAYEE_V1
-    (PAYEENAME, CATEGID, SUBCATEGID)
-    VALUES (?,?,?)
-    ''', (name, cat_id, sub_id))
-
-    return r.rowcount
-
-
-def insert_details_to_account(cur: Cursor, details: str, to_account_id: int) -> int:
-    r = cur.execute('''
-    INSERT INTO details_to_account
-    (DETAILS, ACCOUNTID)
-    VALUES (?,?)
-    ''', (details, to_account_id))
-    return r.rowcount
-
-def insert_details_to_account_from_details_and_account_name(cur: Cursor, details: str, account_name: str) -> int:
-    r = cur.execute('''
-INSERT INTO details_to_account(DETAILS, ACCOUNTID)
-
-SELECT ?, ACCOUNTID
-FROM ACCOUNTLIST_V1
-WHERE ACCOUNTNAME = ?
-LIMIT 1
-    ''', (details, account_name))
-    return r.rowcount
 
 
 def get_trans_id(cur: Cursor) -> int:
@@ -60,9 +20,37 @@ FROM CHECKINGACCOUNT_V1 ORDER BY TRANSID DESC LIMIT 1;
 def get_transcode(cur:Cursor, t: str) -> str:
     r = cur.execute('''
     SELECT TRANSCODE FROM type_to_transcode
-    WHERE TRANSTYPE = '%s'
-    ''' % t).fetchone()
+    WHERE TRANSTYPE = ?
+    ''', (t,)).fetchone()
     return r[0] if r else None
+
+# def get_account_id_through_details(cur:Cursor, details: str) -> int:
+#     r = cur.execute('''
+#     SELECT ACCOUNTID FROM details_to_account
+#     WHERE DETAILS = ?
+#     ''', (details,)).fetchone()
+#     return int(r[0]) if r else None
+
+
+def get_payee_cat_sub_id_through_details(cur:Cursor, details: str) -> Tuple:
+    r = cur.execute('''
+    SELECT p.PAYEEID, CATEGID, SUBCATEGID 
+    FROM details_to_payee as d, PAYEE_V1 as p
+    WHERE 
+     d.DETAILS = ? AND
+     p.PAYEENAME = d.PAYEENAME COLLATE NOCASE 
+    LIMIT 1
+    ''' , (details,)).fetchone()
+    return r if r else None
+
+def get_account_id_through_details(cur:Cursor, details: str) -> Tuple:
+    r = cur.execute('''
+    SELECT ACCOUNTID
+    FROM details_to_account 
+    WHERE DETAILS = ? COLLATE NOCASE 
+    ''' , (details,)).fetchone()
+    return r if r else None
+
 
 """
 Return None if cannot find
@@ -83,6 +71,8 @@ def get_account_id(cur: Cursor, name: str) -> int or None:
     WHERE ACCOUNTNAME = '%s'
     ''' % name).fetchall()
     return None if len(r) != 1 else r[0][0]
+
+
 
 
 """
